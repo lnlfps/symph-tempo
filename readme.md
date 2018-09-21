@@ -1,9 +1,9 @@
 
 # @symph/tempo
 
-`@symph/tempo`是一个React应用的轻量框架，基于redux，简化了redux的使用及其复杂的概念，采用MVC的思想使代码和应用结构更加清晰，从而可以轻松高效的开发。
+`@symph/tempo`是一个React应用的轻量框架，基于redux，简化了redux的使用及其复杂的概念，采用MVC的思想使代码和应用结构更加清晰，从而可以轻松高效的开发。
 
-该框架只提供MVC组件支持，并不包含路由和构建相关的模块，这样可以更方便的集成到其它框架中（[create-react-app](https://github.com/facebook/create-react-app)、react-native等）。如果你想要一个全栈的高可用框架，来帮你解决各种技术细节，快速的进入业务开发，请关注 [`@symph/joy`](https://github.com/lnlfps/symph-joy) 项目，它基于本项目，为开发提供更全面的项目能力。
+该框架只提供MVC组件支持，并不包含路由和构建相关的模块，这样可以更方便的集成到其它框架中（[create-react-app](https://github.com/facebook/create-react-app)、react-native等）。如果你想要一个全栈的高可用框架，来帮你解决各种技术细节，快速的进入业务开发，请关注 [`@symph/joy`](https://github.com/lnlfps/symph-joy) 项目，它基于本项目，为开发提供更全面的项目能力。
 
 ## 安装
 
@@ -54,7 +54,7 @@ class App extends Component {
 export default App;
 ```
 
-## 创建MVC组件
+## 创建MVC组件
 
 - Model: 管理应用的行为和数据，普通class类，有初始状态，业务运行中更新model状态
 - View: 展示数据，继承React.Component
@@ -145,7 +145,7 @@ model将会被注册到redux store中，由store统一管理model的状态，使
 
 Controller需要申明其依赖哪些Model，以及绑定Model的中的数据，和调用Model中的业务方法。它是一个React组件，可以像其它React组件一样创建和使用。
 
-下面创建一个计数器Controller，展示Model中存储的统计值，以及调用Model中的方法来修改统计值。
+下面创建一个计数器Controller，展示Model中存储的统计值，以及调用Model中的方法来修改统计值。
 
 ```javascript
 // models/CalculateController.js
@@ -155,7 +155,7 @@ import CalculateModel from '../models/CalculateModel'
 
 @requireModel(CalculateModel)
 @controller((state) => {
-  // 绑定calculateModel中的状态到当前组件
+  // 绑定calculateModel中的状态到当前组件
   return {
     counter: state.calculate.counter,  // bind model's state to props
   }
@@ -163,7 +163,7 @@ import CalculateModel from '../models/CalculateModel'
 export default class CalculateController extends Component {
   add = async () => {
     let {dispatch} = this.props
-    // 调用calculateModel中的业务方法
+    // 调用calculateModel中的业务方法
     await dispatch({
       type: 'calculate/add',
       number: 1
@@ -202,7 +202,7 @@ import CalculateModel from '../models/CalculateModel'
 class CalculateController extends Component {
   add = async () => {
     let {dispatch} = this.props
-    // 调用calculateModel中的业务方法
+    // 调用calculateModel中的业务方法
     await dispatch({
       type: 'calculate/add',
       number: 1
@@ -221,7 +221,7 @@ class CalculateController extends Component {
 }
 
 const Controller = controller((state) => {
- // 绑定calculateModel中的状态到当前组件
+ // 绑定calculateModel中的状态到当前组件
   return {
     counter: state.calculate.counter,  // bind model's state to props
   }

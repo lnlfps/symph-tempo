@@ -1,9 +1,18 @@
 {
   "name": "@symph/tempo",
   "version": "0.1.0",
-  "description": "MVC React app framework",
+  "description": "MVC React app framework, based on Redux",
   "main": "dist/index.js",
   "license": "MIT",
+  "repository": "https://github.com/lnlfps/symph-tempo",
+  "homepage": "https://github.com/lnlfps/symph-tempo",
+  "files": [
+    "dist",
+    "controller.js",
+    "index.js",
+    "model.js",
+    "provider.js"
+  ],
   "scripts": {
     "build": "taskr",
     "release": "taskr release",
