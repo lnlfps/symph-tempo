@@ -27,13 +27,22 @@ function model() {
       }
 
       getState() {
+        this._checkInit()
         return this.store.getState()[this.namespace]
       }
 
-      selectState() {
+
+      getStoreState() {
         this._checkInit()
 
         return this.store.getState()
+      }
+
+      selectState() {
+        if(process.env.NODE_ENV === 'development'){
+          console.warn('mode selectState is deprecated, user getStoreState instead')
+        }
+        return this.getStoreState();
       }
 
       _checkInit() {
