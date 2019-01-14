@@ -3,54 +3,99 @@
  * @returns {function(*)}
  * @constructor
  */
-function model() {
-  return Mod => {
-    return class ExMod extends Mod {
-      static _type = '__MODEL';
-
-      constructor(app) {
-        super(...arguments)
-
-        this.store = app._store
-        this.dispatch = this.store.dispatch
+function model(config) {
+  return function decorator (Model) {
+    Model.elements.push({
+      kind:"field",
+      key:"_type",
+      placement:"static",
+      descriptor:{"writable":false,"configurable":true,"enumerable":false},
+      initializer: function () {
+        return '__MODEL'
       }
+    })
 
-      setState(nextState) {
-        this._checkInit()
-
-        const action = {
-          type: this.namespace + '/__SET_STATE',
-          nextState
-        }
-
-        return this.dispatch(action)
-      }
-
-      getState() {
-        this._checkInit()
-        return this.store.getState()[this.namespace]
-      }
-
-
-      getStoreState() {
-        this._checkInit()
-
-        return this.store.getState()
-      }
-
-      selectState() {
-        if(process.env.NODE_ENV === 'development'){
-          console.warn('mode selectState is deprecated, user getStoreState instead')
-        }
-        return this.getStoreState();
-      }
-
-      _checkInit() {
-        if (!this.dispatch) {
-          throw new Error(`you must requireModel(${Mod}), before use it`)
+    Model.elements.push({
+      "kind":"method",
+      "key":"init",
+      "placement":"prototype",
+      "descriptor":{"writable":true,"configurable":true,"enumerable":false,
+        value:function (app) {
+          this._app = app
+          this.store = app._store
+          this.dispatch = this.store.dispatch
         }
       }
-    }
+    })
+
+    Model.elements.push({
+      "kind":"method",
+      "key":"_checkInit",
+      "placement":"prototype",
+      "descriptor":{"writable":true,"configurable":true,"enumerable":false,
+        value:function () {
+          if (!this.store) {
+            throw new Error(`must use @requireModel(${Model}) decorator on class, before use it`)
+          }
+        }
+      }
+    })
+
+    Model.elements.push({
+      "kind":"method",
+      "key":"setState",
+      "placement":"prototype",
+      "descriptor":{"writable":true,"configurable":true,"enumerable":false,
+        value:function (nextState) {
+          this._checkInit()
+          const action = {
+            type: this.namespace + '/__SET_STATE',
+            nextState
+          }
+          return this.dispatch(action)
+        }
+      }
+    })
+
+    Model.elements.push({
+      "kind":"method",
+      "key":"getState",
+      "placement":"prototype",
+      "descriptor":{"writable":true,"configurable":true,"enumerable":false,
+        value:function (nextState) {
+          this._checkInit()
+          return this.store.getState()[this.namespace]
+        }
+      }
+    })
+
+    Model.elements.push({
+      "kind":"method",
+      "key":"getStoreState",
+      "placement":"prototype",
+      "descriptor":{"writable":true,"configurable":true,"enumerable":false,
+        value:function () {
+          this._checkInit()
+          return this.store.getState()
+        }
+      }
+    })
+
+    Model.elements.push({
+      "kind":"method",
+      "key":"selectState",
+      "placement":"prototype",
+      "descriptor":{"writable":true,"configurable":true,"enumerable":false,
+        value:function () {
+          if(process.env.NODE_ENV === 'development'){
+            console.warn('mode selectState is deprecated, user getStoreState instead')
+          }
+          return this.getStoreState();
+        }
+      }
+    })
+
+    return Model;
   }
 }
 

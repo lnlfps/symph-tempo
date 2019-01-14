@@ -122,7 +122,7 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
     const store = app._store
     if (m.reducers) {
       store.asyncReducers[m.namespace] = getReducer(m.reducers, m.state)
-      store.replaceReducer(createReducer(store.asyncReducers))
+      store.replaceReducer(createReducer())
     }
     if (m.effects) {
       store.runSaga(app._getSaga(m.effects, m, onError, plugin.get('onEffect')))
@@ -136,7 +136,8 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
    * 注册简化版的model
    */
   function injectModelClass (createReducer, onError, unlisteners, Model) {
-    const model = new Model(app)
+    const model = new Model()
+    model.init(app)
     const namespace = model.namespace
     const store = app._store
 
@@ -151,7 +152,7 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
         return state
       }
     }
-    store.replaceReducer(createReducer(store.asyncReducers))
+    store.replaceReducer(createReducer())
   }
 
   /**
@@ -182,6 +183,7 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
 
     // Delete model from app._models
     app._models = app._models.filter(model => model.namespace !== namespace)
+    delete app.models[namespace]
   }
 
   /**

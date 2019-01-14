@@ -1,35 +1,35 @@
 export default class PrepareManager {
-  constructor () {
+  constructor() {
     // 所在在执行的componentPrepare函数返回的Promise列表
     this.prepares = []
   }
 
-  prepareComponent (component) {
+  prepareComponent(component) {
     if (!component.componentPrepare) {
       // console.debug(`the component has not a componentPrepare method， component${component}`)
-      return
+      return Promise.resolve()
     }
 
     const componentPrepare = component.componentPrepare
-    if (componentPrepare) {
-      try {
-        let prepareResult = componentPrepare.call(component)
-
-        // only server
-        if (typeof window === 'undefined') {
-          this.pushPrepareWaitList(Promise.resolve(prepareResult))
-        }
-      } catch (e) {
-        console.error(e)
-      }
+    let preparePromise = componentPrepare.call(component)
+    // only on server
+    if (typeof window === 'undefined') {
+      this.pushPrepareWaitList(Promise.resolve(preparePromise))
     }
+
+    // do not handle the error
+    // preparePromise.catch((e) => {
+    //   console.error(e)
+    // })
+
+    return preparePromise
   }
 
-  pushPrepareWaitList (p) {
+  pushPrepareWaitList(p) {
     this.prepares.push(p)
   }
 
-  waitAllPrepareFinished () {
+  waitAllPrepareFinished() {
     return Promise.all(this.prepares)
   }
 }

@@ -1,13 +1,36 @@
-import { ActionTypes } from 'redux/lib/createStore'
+import { __DO_NOT_USE__ActionTypes as ActionTypes } from 'redux/lib/redux'
 import isPlainObject from 'lodash/isPlainObject'
-import warning from 'redux/lib/utils/warning'
+
+/**
+ * Prints a warning in the console if it exists.
+ *
+ * @param {String} message The warning message.
+ * @returns {void}
+ */
+function warning(message) {
+  /* eslint-disable no-console */
+  if (typeof console !== 'undefined' && typeof console.error === 'function') {
+    console.error(message);
+  }
+  /* eslint-enable no-console */
+
+
+  try {
+    // This error was thrown as a convenience so that if you enable
+    // "break on all exceptions" in your console,
+    // it would pause the execution at this line.
+    throw new Error(message);
+  } catch (e) {} // eslint-disable-line no-empty
+
+}
 
 function getUndefinedStateErrorMessage (key, action) {
   const actionType = action && action.type
-  const actionName = (actionType && `"${actionType.toString()}"`) || 'an action'
+  const actionDescription =
+    (actionType && `action "${String(actionType)}"`) || 'an action'
 
   return (
-    `Given action ${actionName}, reducer "${key}" returned undefined. ` +
+    `Given ${actionDescription}, reducer "${key}" returned undefined. ` +
     `To ignore an action, you must explicitly return the previous state. ` +
     `If you want this reducer to hold no value, you can return null instead of undefined.`
   )
@@ -29,23 +52,22 @@ function getUnexpectedStateShapeWarningMessage (inputState, reducers, action, un
   if (!isPlainObject(inputState)) {
     return (
       `The ${argumentName} has unexpected type of "` +
-      ({}).toString.call(inputState).match(/\s([a-z|A-Z]+)/)[1] +
+      {}.toString.call(inputState).match(/\s([a-z|A-Z]+)/)[1] +
       `". Expected argument to be an object with the following ` +
       `keys: "${reducerKeys.join('", "')}"`
     )
   }
 
-  /**
-   * remove those code, well will 。 lane  2017年12月21日
-   */
-  // const unexpectedKeys = Object.keys(inputState).filter(key =>
-  //   !reducers.hasOwnProperty(key) &&
-  //   !unexpectedKeyCache[key]
+  // ****** turnoff those codes, in order to support dynamic import
+  // const unexpectedKeys = Object.keys(inputState).filter(
+  //   key => !reducers.hasOwnProperty(key) && !unexpectedKeyCache[key]
   // )
   //
   // unexpectedKeys.forEach(key => {
   //   unexpectedKeyCache[key] = true
   // })
+  //
+  // if (action && action.type === ActionTypes.REPLACE) return
   //
   // if (unexpectedKeys.length > 0) {
   //   return (
@@ -72,8 +94,11 @@ function assertReducerShape (reducers) {
       )
     }
 
-    const type = '@@redux/PROBE_UNKNOWN_ACTION_' + Math.random().toString(36).substring(7).split('').join('.')
-    if (typeof reducer(undefined, { type }) === 'undefined') {
+    if (
+      typeof reducer(undefined, {
+        type: ActionTypes.PROBE_UNKNOWN_ACTION()
+      }) === 'undefined'
+    ) {
       throw new Error(
         `Reducer "${key}" returned undefined when probed with a random type. ` +
         `Don't try to handle ${ActionTypes.INIT} or other actions in "redux/*" ` +
