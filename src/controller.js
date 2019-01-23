@@ -5,36 +5,17 @@ import PropTypes from 'prop-types'
 const enhancers = []
 
 /**
- * 将react 组件封装为controller，提供componentPrepare方法。
+ * 将react 组件封装为controller组件
  * @param mapStateToProps
  * @returns connect Redux后的HOC
  */
 function controller(mapStateToProps) {
   return Comp => {
-
-    let componentPrepare = Comp.elements.find(el => el.key === 'componentPrepare')
+    let modelFields = Comp.elements.filter(el => el.descriptor.get && el.descriptor.get.__ModelType)
 
     Comp.finisher = function (_constructor) {
 
-      // inject joy props
-      const wrapMapStateToProps = (store, ownProps) => {
-        // console.trace("Here I am!")
-        let isPrepared = store['@@joy'].isPrepared
-        const joyProps = {__componentHasPrepared: isPrepared}
-
-        if (typeof mapStateToProps === 'function') {
-          let props = mapStateToProps(store, ownProps)
-          return {
-            ...props,
-            ...joyProps
-          }
-        } else {
-          return joyProps
-        }
-      }
-
-      class Wrapper extends _constructor {
-
+      class ControllerWrapper extends _constructor {
         static contextTypes = {
           tempo: PropTypes.object,
           ..._constructor.contextTypes
@@ -42,13 +23,11 @@ function controller(mapStateToProps) {
 
         constructor(...args) {
           super(...args)
-          this._isMounted = false
           let context = args[1]
+          const {__componentHasPrepared} = this.props
           const {tempo} = context
-          // try to p
-          if (componentPrepare) {
 
-            const {__componentHasPrepared} = this.props
+          if (this.componentPrepare) {
             let isNeedCallPrepare = false
             if (typeof window === 'undefined') {
               // on node.js
@@ -66,49 +45,17 @@ function controller(mapStateToProps) {
           }
         }
 
-        componentDidMount(...args){
-          this._isMounted = true
-          if(super.componentDidMount){
-            super.componentDidMount(...args);
+        // 服务端渲染时，不可调用setState方法，设置不会生效，会导致服务端和浏览器上渲染的结果不一致
+        setState(...args) {
+          if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
+            let dispalyName = _constructor.displayName || _constructor.name || 'Component'
+            throw new Error(`Controller(${dispalyName}): can't call setState during componentPrepare, this will not work on ssr`);
           }
-        }
-
-        componentWillUnmount(...args) {
-          this._isMounted = false
-          if(super.componentWillUnmount){
-            super.componentWillUnmount(...args);
-          }
-        }
-
-        setState(...args){
-          // 服务端渲染时，不可调用setState方法，设置不会生效，
-          // 会导致服务端和浏览器上渲染的结果不一致
-          if(typeof window === 'undefined' && process.env.NODE_ENV !== 'production'){
-            let dispalyName =  _constructor.displayName || _constructor.name || 'Component'
-            throw new Error(`Controller(${dispalyName}) can't setState during componentPrepare, this will not work on ssr`);
-          }
-
-          let stateChange = args[0]
-          let callback = null
-          if(args.length >= 2){
-            callback = args[1]
-          }
-          if(this._isMounted){
-            super.setState(...args)
-          } else {
-            // may be a updater function
-            if(typeof stateChange === 'function'){
-              stateChange = stateChange(this.state, this.props)
-            }
-            this.state = Object.assign(this.state, stateChange)
-            if(callback){
-              callback()
-            }
-          }
+          super.setState(...args)
         }
       }
 
-      let EnhancedComp = connect(wrapMapStateToProps, dispatch => ({dispatch}))(Wrapper)
+      let EnhancedComp = connect(mapStateToProps, dispatch => ({dispatch}))(ControllerWrapper)
 
       if (enhancers.length > 0) {
         enhancers.forEach((enhancer) => {
@@ -118,10 +65,58 @@ function controller(mapStateToProps) {
           }
         })
       }
-      return EnhancedComp
+
+      return injectModelsToProps(EnhancedComp, modelFields)
     }
   }
 }
+
+
+function injectModelsToProps(Comp, modelFieldDescriptors) {
+
+  // get joy state from store
+  const joyWrapMapStateToProps = (store, ownProps) => {
+    // console.trace("Here I am!")
+    let isPrepared = store['@@joy'].isPrepared
+    const joyProps = {
+      __componentHasPrepared: isPrepared,
+      __joyStoreState: store
+    }
+    return joyProps
+  }
+
+  class ModelWrapper extends React.PureComponent {
+    static contextTypes = {
+      tempo: PropTypes.object,
+    }
+
+    constructor(props, context) {
+      super(...arguments)
+      const {__joyStoreState} = props
+      const {tempo} = context
+
+      // register bind models
+      if (modelFieldDescriptors && modelFieldDescriptors.length > 0) {
+        modelFieldDescriptors.forEach((modelField) => {
+          let modelClass = modelField.descriptor.get.__ModelType
+          tempo.model(modelClass)
+        })
+        const newStoreState = tempo.getState()
+        // WARNING react-rudex默认并不会立即更新mapStateToProps中的storeState入参，
+        // 导致在子组件树中使用刚注册的model的state会出错，所以在这里主动将新状态更新到当前渲染的状态上。
+        Object.assign(__joyStoreState, newStoreState)
+      }
+    }
+
+    render() {
+      return <Comp {...this.props} tempo={this.context.tempo}/>
+    }
+  }
+
+  return connect(joyWrapMapStateToProps)(ModelWrapper)
+}
+
+
 
 /***
  * 注册依赖的Model
@@ -130,6 +125,11 @@ function controller(mapStateToProps) {
  * @returns {function(*)}
  */
 function requireModel(...models) {
+  if (process.env.NODE_ENV === 'development' && console && console.warn) {
+    console.warn('@requireModel has been deprecated since 0.6.1，' +
+      'use @autowire() to bind model to controller instead.' +
+      ' this will be removed in the near future')
+  }
   return Comp => {
     if (!models || models.length === 0) {
       return
@@ -156,7 +156,6 @@ function requireModel(...models) {
           // 导致在子组件树中使用刚注册的model的state会出错，所以在这里主动将新状态更新到当前渲染的状态上。
           Object.assign(storeState, newStoreState)
         }
-
       }
 
       let EnhancedComp = connect((storeState, ownProps) => {

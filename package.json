@@ -1,6 +1,6 @@
 {
   "name": "@symph/tempo",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "MVC React app framework, based on Redux",
   "main": "dist/index.js",
   "license": "MIT",
@@ -8,9 +8,10 @@
   "homepage": "https://github.com/lnlfps/symph-tempo",
   "files": [
     "dist",
-    "controller.js",
     "index.js",
+    "controller.js",
     "model.js",
+    "autowire.js",
     "provider.js"
   ],
   "scripts": {

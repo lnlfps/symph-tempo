@@ -5,6 +5,9 @@
  */
 function model(config) {
   return function decorator (Model) {
+
+    const autowireFields = Model.elements.filter(el => el.descriptor.get && el.descriptor.get.__ModelType)
+
     Model.elements.push({
       kind:"field",
       key:"_type",
@@ -24,9 +27,19 @@ function model(config) {
           this._app = app
           this.store = app._store
           this.dispatch = this.store.dispatch
+
+          this.tempo = app
+          if(autowireFields && autowireFields.length > 0){
+            autowireFields.forEach((autowireField) => {
+              let modelClass = autowireField.descriptor.get.__ModelType
+              app.model(modelClass)
+            })
+          }
         }
       }
     })
+
+
 
     Model.elements.push({
       "kind":"method",
@@ -87,8 +100,8 @@ function model(config) {
       "placement":"prototype",
       "descriptor":{"writable":true,"configurable":true,"enumerable":false,
         value:function () {
-          if(process.env.NODE_ENV === 'development'){
-            console.warn('mode selectState is deprecated, user getStoreState instead')
+          if(process.env.NODE_ENV === 'development' && console && console.warn){
+            console.warn('mode selectState is deprecated, use getStoreState() instead')
           }
           return this.getStoreState();
         }

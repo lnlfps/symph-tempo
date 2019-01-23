@@ -43,10 +43,11 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
   plugin.use(filterHooks(hooksAndOpts))
 
   const app = {
-    _models: [ // dva's model
+    _models: [ // dva's model.
       prefixNamespace({ ...dvaModel })
     ],
-    models: {}, // use object to save models, the key is model's namespace
+    models: {}, // tempo's model. use object to save models, the key is model's namespace
+    diObjects: {}, //dependency injection objects
     _store: null,
     dispatch,
     getState,
@@ -103,17 +104,13 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
    */
   function injectModel (createReducer, onError, unlisteners, m) {
     if (m._type === '__MODEL') {
-      injectModelClass(createReducer, onError, unlisteners, m)
-      return
+      return injectModelClass(createReducer, onError, unlisteners, m)
     }
 
-    // 如果已经存在，就不用重复添加 lane  2017年12月29日
-    if (app._models && app._models.length) {
-      for (let _m of app._models) {
-        if (_m === m) {
-          // console.log(`dva, model(${m.namespace}) is existed`);
-          return
-        }
+    // 如果已经存在，就不用重复添加
+    for (let _m of app._models) {
+      if (_m === m) {
+        return _m
       }
     }
 
@@ -130,18 +127,26 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
     if (m.subscriptions) {
       unlisteners[m.namespace] = runSubscription(m.subscriptions, m, app, onError)
     }
+
+    return m
   }
 
   /**
    * 注册简化版的model
    */
   function injectModelClass (createReducer, onError, unlisteners, Model) {
+    if(app.diObjects[Model]){
+      // duplication of model
+      return app.diObjects[Model]
+    }
+
     const model = new Model()
     model.init(app)
     const namespace = model.namespace
     const store = app._store
 
     app.models[namespace] = model
+    app.diObjects[Model] = model
 
     // set reducers
     store.asyncReducers[model.namespace] = (state = model.initState, action) => {
@@ -153,6 +158,8 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
       }
     }
     store.replaceReducer(createReducer())
+
+    return model
   }
 
   /**
@@ -183,7 +190,20 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
 
     // Delete model from app._models
     app._models = app._models.filter(model => model.namespace !== namespace)
-    delete app.models[namespace]
+
+    // if it is a tempo model, remove it
+    if(app.models[namespace]){
+      let model = app.models[namespace]
+      let diType
+      for(let key of app.diObjects){
+        if(app.diObjects[key].namespace === model.namespace){
+          diType = [key]
+          break
+        }
+      }
+      delete app.models[namespace]
+      delete app.diObjects[diType]
+    }
   }
 
   /**
