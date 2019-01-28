@@ -2,14 +2,13 @@ import React, {PureComponent} from 'react'
 import {connect} from 'react-redux'
 import PropTypes from 'prop-types'
 
-const enhancers = []
-
 /**
  * 将react 组件封装为controller组件
  * @param mapStateToProps
+ * @param enhance 对Controller进行再次封装，默认有redux connect。 @symph/joy默认提供：with-router, react-hot-loader
  * @returns connect Redux后的HOC
  */
-function controller(mapStateToProps) {
+function controller(mapStateToProps, {enhance} = {}) {
   return Comp => {
     let modelFields = Comp.elements.filter(el => el.descriptor.get && el.descriptor.get.__ModelType)
 
@@ -48,22 +47,44 @@ function controller(mapStateToProps) {
         // 服务端渲染时，不可调用setState方法，设置不会生效，会导致服务端和浏览器上渲染的结果不一致
         setState(...args) {
           if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
-            let dispalyName = _constructor.displayName || _constructor.name || 'Component'
-            throw new Error(`Controller(${dispalyName}): can't call setState during componentPrepare, this will not work on ssr`);
+            let displayName = _constructor.displayName || _constructor.name || 'Component'
+            throw new Error(`Controller(${displayName}): can't call setState during componentPrepare, this will not work on ssr`);
           }
           super.setState(...args)
         }
       }
 
-      let EnhancedComp = connect(mapStateToProps, dispatch => ({dispatch}))(ControllerWrapper)
+      // default enhancer
+      let enhancers = []
+      enhancers.push(connect(mapStateToProps, dispatch => ({dispatch})))
+      // custom enhancers
+      if (enhance && typeof enhance === "function") {
+        enhancers = enhance(enhancers) || enhancers
+      }
 
-      if (enhancers.length > 0) {
+      let EnhancedComp = ControllerWrapper
+
+      if (enhancers && enhancers.length > 0) {
+        let hasConnectHOC = false
         enhancers.forEach((enhancer) => {
           EnhancedComp = enhancer(EnhancedComp)
           if ((typeof EnhancedComp === 'undefined') || EnhancedComp === null || !EnhancedComp.prototype.isReactComponent) {
             throw 'the enhance must return a React.Component or React.PureComponent'
           }
+          if (EnhancedComp.displayName && /Connect\(/.test(EnhancedComp.displayName)) {
+            hasConnectHOC = true
+          }
         })
+        // check
+        if (process.env.NODE_ENV === 'development') {
+          if (!hasConnectHOC && console.warn) {
+            console.warn(`controller(${getCompDisplayName(_constructor) || ''}) redux connect hoc has been removed,`)
+          }
+        }
+      } else {
+        if (process.env.NODE_ENV === 'development' && console.warn) {
+          console.warn(`controller(${getCompDisplayName(_constructor) || ''}) enhancers is empty, you should not remove all enhancers`)
+        }
       }
 
       return injectModelsToProps(EnhancedComp, modelFields)
@@ -109,13 +130,15 @@ function injectModelsToProps(Comp, modelFieldDescriptors) {
     }
 
     render() {
-      return <Comp {...this.props} tempo={this.context.tempo}/>
+      let childProps = {...this.props}
+      delete childProps.__joyStoreState
+
+      return <Comp {...childProps} tempo={this.context.tempo}/>
     }
   }
 
   return connect(joyWrapMapStateToProps)(ModelWrapper)
 }
-
 
 
 /***
@@ -167,35 +190,10 @@ function requireModel(...models) {
   }
 }
 
-/**
- * 添加对Controller组件进行高阶封装， 这个方法会对所有的Controller组件生效
- * @param enhancer (Component) => {return Component}
- */
-function addEnhancer(enhancer) {
-  if (typeof enhancer !== 'function') {
-    throw 'the controller enhancer must is a function'
-  }
-
-  enhancers.push(enhancer)
-}
-
-/**
- * 对移除对Controller组件进行高阶封装
- * @param enhancer (Component) => {return Component}
- */
-function removeEnhancer(enhancer) {
-  if (typeof enhancer !== 'function') {
-    throw 'the controller enhancer must is a function'
-  }
-
-  for (let i = 0; i < enhancers.length; i++) {
-    if (enhancers[i] === enhancer) {
-      enhancers.splice(i, 1)
-      break
-    }
-  }
+function getCompDisplayName(Comp) {
+  return Comp.displayName || Comp.name
 }
 
 
 export default controller
-export {controller, requireModel, connect, addEnhancer, removeEnhancer}
+export {controller, requireModel, connect}
