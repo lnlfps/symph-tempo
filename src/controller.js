@@ -143,16 +143,11 @@ function injectModelsToProps(Comp, modelFieldDescriptors) {
 
 /***
  * 注册依赖的Model
- * 只需要在第一个依赖Model的Controller上注册，多次注册只有第一次注册有效。
+ * 建议在controller中使用autowire申明依赖的model
  * @param models array
  * @returns {function(*)}
  */
 function requireModel(...models) {
-  if (process.env.NODE_ENV === 'development' && console && console.warn) {
-    console.warn('@requireModel has been deprecated since 0.6.1，' +
-      'use @autowire() to bind model to controller instead.' +
-      ' this will be removed in the near future')
-  }
   return Comp => {
     if (!models || models.length === 0) {
       return
