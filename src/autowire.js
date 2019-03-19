@@ -8,7 +8,7 @@ function autowire({type: ModelType}) {
     const getter = function () {
       let tempo = this.tempo || (this.props && this.props.tempo)
       if(tempo){
-        return tempo.diObjects[ModelType];
+        return tempo.diObjects[ModelType.namespace];
       } else {
         throw new Error('use autowire out of Controller of Model')
       }

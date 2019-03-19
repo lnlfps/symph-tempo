@@ -135,19 +135,18 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
    * 注册简化版的model
    */
   function injectModelClass (createReducer, onError, unlisteners, Model) {
-    if(app.diObjects[Model]){
+    const namespace = Model.namespace
+    if(app.diObjects[namespace]){
       // duplication of model
-      return app.diObjects[Model]
+      return app.diObjects[namespace]
     }
 
     const model = new Model()
-    model.init(app)
-    const namespace = model.namespace
-    const store = app._store
-
     app.models[namespace] = model
-    app.diObjects[Model] = model
+    app.diObjects[namespace] = model
+    model.init(app)
 
+    const store = app._store
     // set reducers
     store.asyncReducers[model.namespace] = (state = model.initState, action) => {
       const { type, nextState } = action
@@ -196,8 +195,8 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
       let model = app.models[namespace]
       let diType
       for(let key of app.diObjects){
-        if(app.diObjects[key].namespace === model.namespace){
-          diType = [key]
+        if(key === model.namespace){
+          diType = key
           break
         }
       }

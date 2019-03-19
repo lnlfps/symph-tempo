@@ -8,6 +8,15 @@ function model(config) {
 
     const autowireFields = Model.elements.filter(el => el.descriptor.get && el.descriptor.get.__ModelType)
 
+    const namespaceFields = Model.elements.find(el => el.key === 'namespace')
+    if(!namespaceFields){
+      throw new Error('the model must has a `namespace` property')
+    }
+    Model.elements.push({
+      ...namespaceFields,
+      placement: 'static'
+    })
+
     Model.elements.push({
       kind:"field",
       key:"_type",
@@ -31,15 +40,13 @@ function model(config) {
           this.tempo = app
           if(autowireFields && autowireFields.length > 0){
             autowireFields.forEach((autowireField) => {
-              let modelClass = autowireField.descriptor.get.__ModelType
+              const modelClass = autowireField.descriptor.get.__ModelType
               app.model(modelClass)
             })
           }
         }
       }
     })
-
-
 
     Model.elements.push({
       "kind":"method",
