@@ -8,6 +8,21 @@ function model(config) {
 
     const autowireFields = Model.elements.filter(el => el.descriptor.get && el.descriptor.get.__ModelType)
 
+    if(typeof window === 'undefined'){
+      // 暂时只在服务端渲染的时候使用，后续可以考虑在这里加入业务方法调用监控，事务等方法。
+      const bizFields = Model.elements.filter(el => el.kind === 'method' && el.placement === 'prototype' && el.descriptor.value)
+      bizFields.forEach(el => {
+        const origin = el.descriptor.value
+        el.descriptor.value = function fieldWrap (...args) {
+          let result = origin.apply(this, args)
+          if(result && typeof result.then === 'function'){
+            this._app.prepareManager.pushPrepareWaitList(result)
+          }
+          return result
+        }
+      })
+    }
+
     const namespaceFields = Model.elements.find(el => el.key === 'namespace')
     if(!namespaceFields){
       throw new Error('the model must has a `namespace` property')

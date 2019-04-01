@@ -1,5 +1,5 @@
 import combineReducers from './combineReducers'
-import createSagaMiddleware from 'redux-saga/lib/internal/middleware'
+import createSagaMiddleware from 'redux-saga'
 import invariant from 'invariant'
 import checkModel from './checkModel'
 import prefixNamespace from './prefixNamespace'
@@ -107,7 +107,7 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
       return injectModelClass(createReducer, onError, unlisteners, m)
     }
 
-    // 如果已经存在，就不用重复添加
+    // handle dva model
     for (let _m of app._models) {
       if (_m === m) {
         return _m
