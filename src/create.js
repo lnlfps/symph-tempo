@@ -23,7 +23,7 @@ const dvaModel = {
     isPrepared: false
   },
   reducers: {
-    updatePrepareState (state, {isPrepared}) { return {...state, isPrepared} }
+    updatePrepareState (state, { isPrepared }) { return { ...state, isPrepared } }
   }
 }
 
@@ -136,7 +136,7 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
    */
   function injectModelClass (createReducer, onError, unlisteners, Model) {
     const namespace = Model.namespace
-    if(app.diObjects[namespace]){
+    if (app.diObjects[namespace]) {
       // duplication of model
       return app.diObjects[namespace]
     }
@@ -151,7 +151,7 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
     store.asyncReducers[model.namespace] = (state = model.initState, action) => {
       const { type, nextState } = action
       if (type === model.namespace + '/__SET_STATE') {
-        return {...state, ...nextState}
+        return { ...state, ...nextState }
       } else {
         return state
       }
@@ -191,11 +191,11 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
     app._models = app._models.filter(model => model.namespace !== namespace)
 
     // if it is a tempo model, remove it
-    if(app.models[namespace]){
+    if (app.models[namespace]) {
       let model = app.models[namespace]
       let diType
-      for(let key of app.diObjects){
-        if(key === model.namespace){
+      for (let key of app.diObjects) {
+        if (key === model.namespace) {
           diType = key
           break
         }

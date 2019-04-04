@@ -37,15 +37,22 @@ function is(x, y) {
   }
 }
 
-export function shallowEqual(objA, objB) {
+/**
+ *
+ * @param objA
+ * @param objB
+ * @param exclude  这些属性，不参与参与比较
+ * @returns {boolean}
+ */
+export function shallowEqual(objA, objB, {exclude = []}) {
   if (is(objA, objB)) return true;
 
   if (typeof objA !== 'object' || objA === null || typeof objB !== 'object' || objB === null) {
     return false;
   }
 
-  var keysA = Object.keys(objA);
-  var keysB = Object.keys(objB);
+  const keysA = Object.keys(objA).filter(i => !exclude.includes(i));
+  const keysB = Object.keys(objB).filter(i => !exclude.includes(i));
   if (keysA.length !== keysB.length) return false;
 
   for (var i = 0; i < keysA.length; i++) {
