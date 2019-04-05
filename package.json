@@ -1,6 +1,6 @@
 {
   "name": "@symph/tempo",
-  "version": "1.2.0-alpha.3",
+  "version": "1.2.1",
   "description": "MVC React app framework, based on Redux",
   "main": "dist/index.js",
   "license": "MIT",

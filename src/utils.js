@@ -44,7 +44,7 @@ function is(x, y) {
  * @param exclude  这些属性，不参与参与比较
  * @returns {boolean}
  */
-export function shallowEqual(objA, objB, {exclude = []}) {
+export function shallowEqual(objA, objB, {exclude = []}={}) {
   if (is(objA, objB)) return true;
 
   if (typeof objA !== 'object' || objA === null || typeof objB !== 'object' || objB === null) {
