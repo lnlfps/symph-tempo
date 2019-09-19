@@ -2,32 +2,32 @@
  * 申明一个字段是一个依赖注入的字段
  * @param type 字段的类型，一个Class
  */
-function autowire({type: ModelType}) {
+function autowire ({ type: ModelType }) {
   return function (target) {
-    const {key} = target
+    const { key } = target
     const getter = function () {
-      let tempo = this.tempo || (this.props && this.props.tempo)
-      if(tempo){
-        return tempo.diObjects[ModelType.namespace];
+      const tempo = this.tempo || (this.props && this.props.tempo)
+      if (tempo) {
+        return tempo.diObjects[ModelType.namespace]
       } else {
         throw new Error('use autowire out of Controller of Model')
       }
     }
-    getter.__ModelType = ModelType;
+    getter.__ModelType = ModelType
 
-    target.key = '_'+key
+    target.key = '_' + key
     return {
       kind: 'method',
       key,
       placement: 'prototype',
       descriptor: {
-        get:getter,
+        get: getter,
         configurable: true,
-        enumerable: true,
+        enumerable: true
       }
     }
   }
 }
 
 export default autowire
-export {autowire}
+export { autowire }

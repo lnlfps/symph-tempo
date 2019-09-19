@@ -27,13 +27,13 @@ export function warning (message) {
   } catch (e) {} // eslint-disable-line no-empty
 }
 
-const hasOwn = Object.prototype.hasOwnProperty;
+const hasOwn = Object.prototype.hasOwnProperty
 
-function is(x, y) {
+function is (x, y) {
   if (x === y) {
-    return x !== 0 || y !== 0 || 1 / x === 1 / y;
+    return x !== 0 || y !== 0 || 1 / x === 1 / y
   } else {
-    return x !== x && y !== y;
+    return Number.isNaN(x) && Number.isNaN(y)
   }
 }
 
@@ -41,25 +41,25 @@ function is(x, y) {
  *
  * @param objA
  * @param objB
- * @param exclude  这些属性，不参与参与比较
+ * @param exclude  这些属性，不参与比较
  * @returns {boolean}
  */
-export function shallowEqual(objA, objB, {exclude = []}={}) {
-  if (is(objA, objB)) return true;
+export function shallowEqual (objA, objB, { exclude = [] } = {}) {
+  if (is(objA, objB)) return true
 
   if (typeof objA !== 'object' || objA === null || typeof objB !== 'object' || objB === null) {
-    return false;
+    return false
   }
 
-  const keysA = Object.keys(objA).filter(i => !exclude.includes(i));
-  const keysB = Object.keys(objB).filter(i => !exclude.includes(i));
-  if (keysA.length !== keysB.length) return false;
+  const keysA = Object.keys(objA).filter(i => !exclude.includes(i))
+  const keysB = Object.keys(objB).filter(i => !exclude.includes(i))
+  if (keysA.length !== keysB.length) return false
 
   for (var i = 0; i < keysA.length; i++) {
     if (!hasOwn.call(objB, keysA[i]) || !is(objA[keysA[i]], objB[keysA[i]])) {
-      return false;
+      return false
     }
   }
 
-  return true;
+  return true
 }

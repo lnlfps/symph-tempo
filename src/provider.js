@@ -1,11 +1,10 @@
-import React, {Component, createContext} from 'react'
+import React, { Component, createContext } from 'react'
 import PropTypes from 'prop-types'
-import {Provider as _Provider} from 'react-redux'
+import { Provider as ReduxProvider } from 'react-redux'
 
-const TempoContext = createContext(null);
+const TempoContext = createContext(null)
 
 class Provider extends Component {
-
   static propTypes = {
     app: PropTypes.object.isRequired
   }
@@ -14,27 +13,24 @@ class Provider extends Component {
     tempo: PropTypes.object
   }
 
-  getChildContext() {
-    const {app} = this.props
+  getChildContext () {
+    const { app } = this.props
     return {
-      tempo: this.props.app
+      tempo: app
     }
   }
 
-  render() {
-    const {app, children} = this.props
+  render () {
+    const { app, children } = this.props
     return (
       <TempoContext.Provider value={app}>
-        <_Provider store={app._store}>
+        <ReduxProvider store={app._store}>
           {children}
-        </_Provider>
+        </ReduxProvider>
       </TempoContext.Provider>
     )
   }
 }
 
 export default Provider
-export {Provider, TempoContext}
-
-
-
+export { Provider, TempoContext }

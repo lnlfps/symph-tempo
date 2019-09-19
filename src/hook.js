@@ -29,7 +29,7 @@ function useMappedState (mapState) {
     setDerivedState(lastDerivedState =>
       shallowEqual(newDerivedState, lastDerivedState)
         ? lastDerivedState
-        : newDerivedState,
+        : newDerivedState
     )
   }
 
@@ -106,9 +106,9 @@ function useJoyEffect (effect, inputs) {
   const isPrepared = store.getState()['@@joy'].isPrepared
 
   if (isServer && !isPrepared) {
-    //on server
-     const clear = effect()
-    if(clear && typeof clear === 'function'){
+    // on server
+    const clear = effect()
+    if (clear && typeof clear === 'function') {
       clear()
     }
   }
@@ -118,7 +118,7 @@ function useJoyEffect (effect, inputs) {
     if (isServer) {
       return
     }
-    if(isPrepared){
+    if (isPrepared) {
       return
     }
 
@@ -133,7 +133,3 @@ export {
   useEffect as useReactEffect,
   useJoyEffect as useEffect
 }
-
-
-
-

@@ -7,9 +7,9 @@ export default function createPromiseMiddleware (app) {
   const map = {}
 
   const middleware = () => next => (action) => {
-    const {type} = action
+    const { type } = action
     if (isEffect(type)) {
-      let task = new Promise((resolve, reject) => {
+      const task = new Promise((resolve, reject) => {
         map[type] = {
           resolve: wrapped.bind(null, type, resolve),
           reject: wrapped.bind(null, type, reject)

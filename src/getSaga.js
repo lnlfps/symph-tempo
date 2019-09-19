@@ -1,9 +1,9 @@
 import invariant from 'invariant'
 import * as sagaEffects from 'redux-saga/effects'
 import warning from 'warning'
-const { takeEvery, takeLatest,  throttle} = sagaEffects;
 import { NAMESPACE_SEP } from './constants'
 import prefixType from './prefixType'
+const { takeEvery, takeLatest, throttle } = sagaEffects
 
 export default function getSaga (resolve, reject, effects, model, onError, onEffect) {
   return function * () {

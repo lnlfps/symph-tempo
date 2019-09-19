@@ -7,21 +7,19 @@ import isPlainObject from 'lodash/isPlainObject'
  * @param {String} message The warning message.
  * @returns {void}
  */
-function warning(message) {
+function warning (message) {
   /* eslint-disable no-console */
   if (typeof console !== 'undefined' && typeof console.error === 'function') {
-    console.error(message);
+    console.error(message)
   }
   /* eslint-enable no-console */
-
 
   try {
     // This error was thrown as a convenience so that if you enable
     // "break on all exceptions" in your console,
     // it would pause the execution at this line.
-    throw new Error(message);
+    throw new Error(message)
   } catch (e) {} // eslint-disable-line no-empty
-
 }
 
 function getUndefinedStateErrorMessage (key, action) {
@@ -31,8 +29,8 @@ function getUndefinedStateErrorMessage (key, action) {
 
   return (
     `Given ${actionDescription}, reducer "${key}" returned undefined. ` +
-    `To ignore an action, you must explicitly return the previous state. ` +
-    `If you want this reducer to hold no value, you can return null instead of undefined.`
+    'To ignore an action, you must explicitly return the previous state. ' +
+    'If you want this reducer to hold no value, you can return null instead of undefined.'
   )
 }
 
@@ -53,7 +51,7 @@ function getUnexpectedStateShapeWarningMessage (inputState, reducers, action, un
     return (
       `The ${argumentName} has unexpected type of "` +
       {}.toString.call(inputState).match(/\s([a-z|A-Z]+)/)[1] +
-      `". Expected argument to be an object with the following ` +
+      '". Expected argument to be an object with the following ' +
       `keys: "${reducerKeys.join('", "')}"`
     )
   }
@@ -87,10 +85,10 @@ function assertReducerShape (reducers) {
     if (typeof initialState === 'undefined') {
       throw new Error(
         `Reducer "${key}" returned undefined during initialization. ` +
-        `If the state passed to the reducer is undefined, you must ` +
-        `explicitly return the initial state. The initial state may ` +
-        `not be undefined. If you don't want to set a value for this reducer, ` +
-        `you can use null instead of undefined.`
+        'If the state passed to the reducer is undefined, you must ' +
+        'explicitly return the initial state. The initial state may ' +
+        'not be undefined. If you don\'t want to set a value for this reducer, ' +
+        'you can use null instead of undefined.'
       )
     }
 
@@ -102,10 +100,10 @@ function assertReducerShape (reducers) {
       throw new Error(
         `Reducer "${key}" returned undefined when probed with a random type. ` +
         `Don't try to handle ${ActionTypes.INIT} or other actions in "redux/*" ` +
-        `namespace. They are considered private. Instead, you must return the ` +
-        `current state for any unknown actions, unless it is undefined, ` +
-        `in which case you must return the initial state, regardless of the ` +
-        `action type. The initial state may not be undefined, but can be null.`
+        'namespace. They are considered private. Instead, you must return the ' +
+        'current state for any unknown actions, unless it is undefined, ' +
+        'in which case you must return the initial state, regardless of the ' +
+        'action type. The initial state may not be undefined, but can be null.'
       )
     }
   })

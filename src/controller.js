@@ -11,10 +11,9 @@ import { shallowEqual } from './utils'
  */
 function controller (mapStateToProps, { enhance } = {}) {
   return Comp => {
-    let modelFields = Comp.elements.filter(el => el.descriptor.get && el.descriptor.get.__ModelType)
+    const modelFields = Comp.elements.filter(el => el.descriptor.get && el.descriptor.get.__ModelType)
 
     Comp.finisher = function (_constructor) {
-
       class ControllerWrapper extends _constructor {
         static contextTypes = {
           tempo: PropTypes.object,
@@ -23,7 +22,7 @@ function controller (mapStateToProps, { enhance } = {}) {
 
         constructor (...args) {
           super(...args)
-          let context = args[1]
+          const context = args[1]
           const { tempo } = context
 
           if (typeof window === 'undefined' && this.componentPrepare) {
@@ -40,7 +39,7 @@ function controller (mapStateToProps, { enhance } = {}) {
         }
 
         componentDidMount () {
-          if(super.componentDidMount){
+          if (super.componentDidMount) {
             super.componentDidMount()
           }
           if (typeof window !== 'undefined' && this.componentPrepare) {
@@ -64,7 +63,7 @@ function controller (mapStateToProps, { enhance } = {}) {
 
       // default enhancer
       let enhancers = []
-      enhancers.push(connect(mapStateToProps, dispatch => ({ dispatch })))
+      enhancers.push(connect(mapStateToProps, dispatch => ({ dispatch }), null, { pure: false }))
       // custom enhancers
       if (enhance && typeof enhance === 'function') {
         enhancers = enhance(enhancers) || enhancers
@@ -76,8 +75,8 @@ function controller (mapStateToProps, { enhance } = {}) {
         let hasConnectHOC = false
         enhancers.forEach((enhancer) => {
           EnhancedComp = enhancer(EnhancedComp)
-          if ((typeof EnhancedComp === 'undefined') || EnhancedComp === null || !EnhancedComp.prototype.isReactComponent) {
-            throw 'the enhance must return a React.Component or React.PureComponent'
+          if ((typeof EnhancedComp === 'undefined') || EnhancedComp === null) {
+            throw new Error('the enhance must return a React.Component or React.PureComponent')
           }
           if (EnhancedComp.displayName && /Connect\(/.test(EnhancedComp.displayName)) {
             hasConnectHOC = true
@@ -101,7 +100,6 @@ function controller (mapStateToProps, { enhance } = {}) {
 }
 
 function injectModelsToProps (Comp, modelFieldDescriptors) {
-
   // get joy state from store
   const joyWrapMapStateToProps = (store, ownProps) => {
     const joyProps = {
@@ -112,7 +110,7 @@ function injectModelsToProps (Comp, modelFieldDescriptors) {
 
   class ModelWrapper extends React.Component {
     static contextTypes = {
-      tempo: PropTypes.object,
+      tempo: PropTypes.object
     }
 
     constructor (props, context) {
@@ -123,7 +121,7 @@ function injectModelsToProps (Comp, modelFieldDescriptors) {
       // register bind models
       if (modelFieldDescriptors && modelFieldDescriptors.length > 0) {
         modelFieldDescriptors.forEach((modelField) => {
-          let modelClass = modelField.descriptor.get.__ModelType
+          const modelClass = modelField.descriptor.get.__ModelType
           tempo.model(modelClass)
         })
         const newStoreState = tempo.getState()
@@ -134,26 +132,26 @@ function injectModelsToProps (Comp, modelFieldDescriptors) {
     }
 
     shouldComponentUpdate (nextProps, nextState, nextContext) {
-      if(!shallowEqual(this.props._joyStoreState, nextProps._joyStoreState)){
-        return !shallowEqual(this.props, nextProps, {exclude: ['_joyStoreState']})
+      if (!shallowEqual(this.props._joyStoreState, nextProps._joyStoreState)) {
+        return !shallowEqual(this.props, nextProps, { exclude: ['_joyStoreState'] })
       }
       return true
     }
 
     render () {
-      const { _joyStoreState } = this.props
+      const { _joyStoreState, ...retainProps } = this.props
       const isPrepared = _joyStoreState['@@joy'].isPrepared
 
-      let childProps = {
-        ...this.props,
+      const childProps = {
+        ...retainProps,
         _componentHasPrepared: isPrepared,
         _joyStoreState: undefined
       }
-      return <Comp {...childProps} tempo={this.context.tempo}/>
+      return <Comp {...childProps} tempo={this.context.tempo} />
     }
   }
 
-  return connect(joyWrapMapStateToProps)(ModelWrapper)
+  return connect(joyWrapMapStateToProps, null, null, { pure: false })(ModelWrapper)
 }
 
 /***
@@ -170,7 +168,6 @@ function requireModel (...models) {
 
     Comp.finisher = function (_constructor) {
       class Wrapper extends _constructor {
-
         static contextTypes = {
           tempo: PropTypes.object,
           ..._constructor.contextTypes
@@ -191,9 +188,9 @@ function requireModel (...models) {
         }
       }
 
-      let EnhancedComp = connect((storeState, ownProps) => {
+      const EnhancedComp = connect((storeState, ownProps) => {
         return { storeState }
-      }, dispatch => ({ dispatch }))(Wrapper)
+      }, dispatch => ({ dispatch }), null, { pure: false })(Wrapper)
 
       return EnhancedComp
     }

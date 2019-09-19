@@ -47,7 +47,7 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
       prefixNamespace({ ...dvaModel })
     ],
     models: {}, // tempo's model. use object to save models, the key is model's namespace
-    diObjects: {}, //dependency injection objects
+    diObjects: {}, // dependency injection objects
     _store: null,
     dispatch,
     getState,
@@ -108,7 +108,7 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
     }
 
     // handle dva model
-    for (let _m of app._models) {
+    for (const _m of app._models) {
       if (_m === m) {
         return _m
       }
@@ -192,9 +192,9 @@ export function create (hooksAndOpts = {}, createOpts = {}) {
 
     // if it is a tempo model, remove it
     if (app.models[namespace]) {
-      let model = app.models[namespace]
+      const model = app.models[namespace]
       let diType
-      for (let key of app.diObjects) {
+      for (const key of app.diObjects) {
         if (key === model.namespace) {
           diType = key
           break

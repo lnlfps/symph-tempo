@@ -1,8 +1,8 @@
-import {NAMESPACE_SEP} from './constants'
+import { NAMESPACE_SEP } from './constants'
 
 export default function createModelMiddleware (app) {
   const middleware = () => next => (action) => {
-    const {type} = action
+    const { type } = action
     if (type.indexOf('/') <= 0) {
       return next(action)
     }
@@ -12,7 +12,7 @@ export default function createModelMiddleware (app) {
     }
 
     const model = app.models[namespace]
-    let fun = model && model[funName]
+    const fun = model && model[funName]
 
     if (fun !== undefined && fun !== null) {
       return fun.call(model, action)

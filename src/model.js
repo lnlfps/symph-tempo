@@ -3,19 +3,18 @@
  * @returns {function(*)}
  * @constructor
  */
-function model(config) {
+function model (config) {
   return function decorator (Model) {
-
     const autowireFields = Model.elements.filter(el => el.descriptor.get && el.descriptor.get.__ModelType)
 
-    if(typeof window === 'undefined'){
+    if (typeof window === 'undefined') {
       // 暂时只在服务端渲染的时候使用，后续可以考虑在这里加入业务方法调用监控，事务等方法。
       const bizFields = Model.elements.filter(el => el.kind === 'method' && el.placement === 'prototype' && el.descriptor.value)
       bizFields.forEach(el => {
         const origin = el.descriptor.value
         el.descriptor.value = function fieldWrap (...args) {
-          let result = origin.apply(this, args)
-          if(result && typeof result.then === 'function'){
+          const result = origin.apply(this, args)
+          if (result && typeof result.then === 'function') {
             this._app.prepareManager.pushPrepareWaitList(result)
           }
           return result
@@ -24,7 +23,7 @@ function model(config) {
     }
 
     const namespaceFields = Model.elements.find(el => el.key === 'namespace')
-    if(!namespaceFields){
+    if (!namespaceFields) {
       throw new Error('the model must has a `namespace` property')
     }
     Model.elements.push({
@@ -33,27 +32,30 @@ function model(config) {
     })
 
     Model.elements.push({
-      kind:"field",
-      key:"_type",
-      placement:"static",
-      descriptor:{"writable":false,"configurable":true,"enumerable":false},
+      kind: 'field',
+      key: '_type',
+      placement: 'static',
+      descriptor: { writable: false, configurable: true, enumerable: false },
       initializer: function () {
         return '__MODEL'
       }
     })
 
     Model.elements.push({
-      "kind":"method",
-      "key":"init",
-      "placement":"prototype",
-      "descriptor":{"writable":true,"configurable":true,"enumerable":false,
-        value:function (app) {
+      kind: 'method',
+      key: 'init',
+      placement: 'prototype',
+      descriptor: {
+        writable: true,
+        configurable: true,
+        enumerable: false,
+        value: function (app) {
           this._app = app
           this.store = app._store
           this.dispatch = this.store.dispatch
 
           this.tempo = app
-          if(autowireFields && autowireFields.length > 0){
+          if (autowireFields && autowireFields.length > 0) {
             autowireFields.forEach((autowireField) => {
               const modelClass = autowireField.descriptor.get.__ModelType
               app.model(modelClass)
@@ -64,11 +66,14 @@ function model(config) {
     })
 
     Model.elements.push({
-      "kind":"method",
-      "key":"_checkInit",
-      "placement":"prototype",
-      "descriptor":{"writable":true,"configurable":true,"enumerable":false,
-        value:function () {
+      kind: 'method',
+      key: '_checkInit',
+      placement: 'prototype',
+      descriptor: {
+        writable: true,
+        configurable: true,
+        enumerable: false,
+        value: function () {
           if (!this.store) {
             throw new Error(`must use @requireModel(${Model}) decorator on class, before use it`)
           }
@@ -77,11 +82,14 @@ function model(config) {
     })
 
     Model.elements.push({
-      "kind":"method",
-      "key":"setState",
-      "placement":"prototype",
-      "descriptor":{"writable":true,"configurable":true,"enumerable":false,
-        value:function (nextState) {
+      kind: 'method',
+      key: 'setState',
+      placement: 'prototype',
+      descriptor: {
+        writable: true,
+        configurable: true,
+        enumerable: false,
+        value: function (nextState) {
           this._checkInit()
           const action = {
             type: this.namespace + '/__SET_STATE',
@@ -93,11 +101,14 @@ function model(config) {
     })
 
     Model.elements.push({
-      "kind":"method",
-      "key":"getState",
-      "placement":"prototype",
-      "descriptor":{"writable":true,"configurable":true,"enumerable":false,
-        value:function (nextState) {
+      kind: 'method',
+      key: 'getState',
+      placement: 'prototype',
+      descriptor: {
+        writable: true,
+        configurable: true,
+        enumerable: false,
+        value: function (nextState) {
           this._checkInit()
           return this.store.getState()[this.namespace]
         }
@@ -105,11 +116,14 @@ function model(config) {
     })
 
     Model.elements.push({
-      "kind":"method",
-      "key":"getStoreState",
-      "placement":"prototype",
-      "descriptor":{"writable":true,"configurable":true,"enumerable":false,
-        value:function () {
+      kind: 'method',
+      key: 'getStoreState',
+      placement: 'prototype',
+      descriptor: {
+        writable: true,
+        configurable: true,
+        enumerable: false,
+        value: function () {
           this._checkInit()
           return this.store.getState()
         }
@@ -117,22 +131,25 @@ function model(config) {
     })
 
     Model.elements.push({
-      "kind":"method",
-      "key":"selectState",
-      "placement":"prototype",
-      "descriptor":{"writable":true,"configurable":true,"enumerable":false,
-        value:function () {
-          if(process.env.NODE_ENV === 'development' && console && console.warn){
+      kind: 'method',
+      key: 'selectState',
+      placement: 'prototype',
+      descriptor: {
+        writable: true,
+        configurable: true,
+        enumerable: false,
+        value: function () {
+          if (process.env.NODE_ENV === 'development' && console && console.warn) {
             console.warn('mode selectState is deprecated, use getStoreState() instead')
           }
-          return this.getStoreState();
+          return this.getStoreState()
         }
       }
     })
 
-    return Model;
+    return Model
   }
 }
 
-export default model;
-export {model}
+export default model
+export { model }
