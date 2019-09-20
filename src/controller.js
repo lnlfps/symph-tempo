@@ -1,7 +1,7 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import PropTypes from 'prop-types'
-import { shallowEqual } from './utils'
+import { isReactClass, shallowEqual } from './utils'
 
 /**
  * 将react 组件封装为controller组件
@@ -54,7 +54,7 @@ function controller (mapStateToProps, { enhance } = {}) {
         // 服务端渲染时，不可调用setState方法，设置不会生效，会导致服务端和浏览器上渲染的结果不一致
         setState (...args) {
           if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
-            let displayName = _constructor.displayName || _constructor.name || 'Component'
+            const displayName = _constructor.displayName || _constructor.name || 'Component'
             throw new Error(`Controller(${displayName}): can't call setState during componentPrepare, this will not work on ssr`)
           }
           super.setState(...args)
@@ -151,7 +151,17 @@ function injectModelsToProps (Comp, modelFieldDescriptors) {
     }
   }
 
-  return connect(joyWrapMapStateToProps, null, null, { pure: false })(ModelWrapper)
+  const Connected = connect(joyWrapMapStateToProps, null, null, { pure: false })(ModelWrapper)
+  // 这里必须返回一个class，不能改变装饰的返回类型，否则无法使用多个装饰器同时装饰一个类。
+  if (isReactClass(Connected)) {
+    return Connected
+  } else {
+    return class extends React.PureComponent {
+      render () {
+        return <Connected />
+      }
+    }
+  }
 }
 
 /***
@@ -173,8 +183,9 @@ function requireModel (...models) {
           ..._constructor.contextTypes
         }
 
-        constructor (props, context) {
-          super(...arguments)
+        constructor (...args) {
+          super(...args)
+          const [props, context] = args
           const { storeState } = props
           const { tempo } = context
 
@@ -192,7 +203,15 @@ function requireModel (...models) {
         return { storeState }
       }, dispatch => ({ dispatch }), null, { pure: false })(Wrapper)
 
-      return EnhancedComp
+      if (isReactClass(EnhancedComp)) {
+        return EnhancedComp
+      } else {
+        return class extends React.PureComponent {
+          render () {
+            return <EnhancedComp />
+          }
+        }
+      }
     }
   }
 }

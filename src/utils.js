@@ -1,6 +1,5 @@
-
+import React from 'react'
 import _isPlainObject from 'is-plain-object'
-
 export const isPlainObject = _isPlainObject
 export const isArray = Array.isArray.bind(Array)
 export const isFunction = o => typeof o === 'function'
@@ -62,4 +61,15 @@ export function shallowEqual (objA, objB, { exclude = [] } = {}) {
   }
 
   return true
+}
+
+export function isReactClass (Component) {
+  return !!(Component.prototype &&
+    (Object.prototype.isPrototypeOf.call(React.Component.prototype, Component.prototype) ||
+      Component.prototype.isReactComponent || // react 14 support
+      Component.prototype.componentWillMount ||
+      Component.prototype.componentWillUnmount ||
+      Component.prototype.componentDidMount ||
+      Component.prototype.componentDidUnmount ||
+      Component.prototype.render))
 }
